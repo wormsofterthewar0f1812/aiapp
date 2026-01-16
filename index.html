@@ -6,77 +6,157 @@
     <title>PWA Text Editor</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        :root { --bg: #1e1e1e; --text: #d4d4d4; --accent: #007acc; }
-        body { margin: 0; font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        /* Header & Install Button */
-        header { padding: 10px 20px; background: #252526; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
-        #install-btn { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; display: none; font-weight: bold; }
-        #install-btn:hover { background: #005f9e; }
+        :root {
+            --bg-dark: #1e1e1e;
+            --text-dark: #d4d4d4;
+            --bg-light: #ffffff;
+            --text-light: #1e1e1e;
+            --accent: #007acc;
+        }
 
-        /* Editor Area */
-        #editor { flex: 1; width: 100%; background: var(--bg); color: var(--text); border: none; padding: 20px; font-family: 'Courier New', monospace; font-size: 16px; resize: none; outline: none; line-height: 1.5; }
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.dark-mode { background: var(--bg-dark); color: var(--text-dark); }
+        body.light-mode { background: var(--bg-light); color: var(--text-light); }
+
+        header {
+            padding: 10px 20px;
+            background: #252526;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        button {
+            margin-left: 10px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: #005f9e; }
+
+        #editor {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            overflow: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        #editor.dark-mode { background: var(--bg-dark); color: var(--text-dark); }
+        #editor.light-mode { background: var(--bg-light); color: var(--text-light); }
     </style>
 </head>
-<body>
-
+<body class="dark-mode">
     <header>
         <span>My PWA Editor</span>
-        <button id="install-btn">Install App</button>
+        <div>
+            <button id="install-btn">Install App</button>
+            <button id="theme-btn">Toggle Theme</button>
+            <button id="export-btn">Export .txt</button>
+            <button id="clear-btn">Clear All</button>
+        </div>
     </header>
 
     <textarea id="editor" placeholder="Start typing... (Everything is auto-saved locally)"></textarea>
 
     <script>
-        /** 1. EDITOR LOGIC: Auto-save to LocalStorage **/
         const editor = document.getElementById('editor');
-        
-        // Load content on startup
-        editor.value = localStorage.getItem('pwa-editor-data') || '';
+        const installBtn = document.getElementById('install-btn');
+        const themeBtn = document.getElementById('theme-btn');
+        const exportBtn = document.getElementById('export-btn');
+        const clearBtn = document.getElementById('clear-btn');
 
-        // Save on every keystroke
+        /** 1. AUTO-SAVE & LOAD **/
+        editor.value = localStorage.getItem('pwa-editor-data') || '';
         editor.addEventListener('input', () => {
             localStorage.setItem('pwa-editor-data', editor.value);
-        });
 
-        /** 2. PWA SERVICE WORKER REGISTRATION **/
+            // Auto-resize
+            editor.style.height = 'auto';
+            editor.style.height = editor.scrollHeight + 'px';
+        });
+        // Initial resize
+        editor.style.height = editor.scrollHeight + 'px';
+
+        /** 2. SERVICE WORKER **/
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/aiapp/sw.js');
-                    .then(reg => console.log('Service Worker registered'))
+                navigator.serviceWorker.register('/aiapp/sw.js')
+                    .then(() => console.log('Service Worker registered'))
                     .catch(err => console.log('Service Worker failed', err));
             });
         }
 
-        /** 3. INSTALLATION LOGIC **/
+        /** 3. INSTALL BUTTON **/
         let deferredPrompt;
-        const installBtn = document.getElementById('install-btn');
-
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent Chrome's default mini-bar
             e.preventDefault();
-            // Stash the event so it can be triggered later
             deferredPrompt = e;
-            // Show the custom install button
-            installBtn.style.display = 'block';
+            installBtn.style.display = 'inline-block';
         });
 
         installBtn.addEventListener('click', async () => {
             if (deferredPrompt) {
-                // Show the ChromeOS install dialog
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 console.log(`User Choice: ${outcome}`);
-                // Hide button after choice
                 deferredPrompt = null;
                 installBtn.style.display = 'none';
             }
         });
 
-        // Hide button if already installed
         window.addEventListener('appinstalled', () => {
             installBtn.style.display = 'none';
-            console.log('App successfully installed to ChromeOS Launcher');
+            console.log('App successfully installed');
+        });
+
+        /** 4. THEME TOGGLE **/
+        themeBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            document.body.classList.toggle('light-mode');
+            editor.classList.toggle('dark-mode');
+            editor.classList.toggle('light-mode');
+        });
+
+        /** 5. EXPORT TO .TXT **/
+        exportBtn.addEventListener('click', () => {
+            const blob = new Blob([editor.value], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'note.txt';
+            link.click();
+        });
+
+        /** 6. CLEAR EDITOR **/
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all notes?')) {
+                editor.value = '';
+                localStorage.removeItem('pwa-editor-data');
+                editor.style.height = 'auto';
+            }
         });
     </script>
 </body>
