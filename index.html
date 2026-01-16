@@ -1,163 +1,98 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PWA Text Editor</title>
-    <link rel="manifest" href="manifest.json">
-    <style>
-        :root {
-            --bg-dark: #1e1e1e;
-            --text-dark: #d4d4d4;
-            --bg-light: #ffffff;
-            --text-light: #1e1e1e;
-            --accent: #007acc;
-        }
+#main-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
 
-        body {
-            margin: 0;
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            transition: background 0.3s, color 0.3s;
-        }
+#sidebar {
+    width: 240px;
+    background: #252526;
+    border-right: 1px solid #333;
+    padding: 15px 10px;
+    overflow-y: auto;
+    color: #ccc;
+}
 
-        body.dark-mode { background: var(--bg-dark); color: var(--text-dark); }
-        body.light-mode { background: var(--bg-light); color: var(--text-light); }
+#sidebar h3 {
+    margin: 0 0 12px;
+    font-size: 1.1em;
+    color: #ddd;
+}
 
-        header {
-            padding: 10px 20px;
-            background: #252526;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #333;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
+#note-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
 
-        button {
-            margin-left: 10px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
+#note-list li {
+    padding: 8px 12px;
+    margin: 4px 0;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
 
-        button:hover { background: #005f9e; }
+#note-list li:hover,
+#note-list li.active {
+    background: #37373d;
+}
 
-        #editor {
-            flex: 1;
-            width: 100%;
-            border: none;
-            padding: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
-            line-height: 1.5;
-            resize: none;
-            outline: none;
-            overflow: hidden;
-            transition: background 0.3s, color 0.3s;
-        }
+#note-list .note-title {
+    font-weight: 500;
+}
 
-        #editor.dark-mode { background: var(--bg-dark); color: var(--text-dark); }
-        #editor.light-mode { background: var(--bg-light); color: var(--text-light); }
-    </style>
-</head>
-<body class="dark-mode">
-    <header>
-        <span>My PWA Editor</span>
-        <div>
-            <button id="install-btn">Install App</button>
-            <button id="theme-btn">Toggle Theme</button>
-            <button id="export-btn">Export .txt</button>
-            <button id="clear-btn">Clear All</button>
-        </div>
-    </header>
+#note-list small {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
 
-    <textarea id="editor" placeholder="Start typing... (Everything is auto-saved locally)"></textarea>
+.delete-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #c00;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    line-height: 18px;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0.7;
+}
 
-    <script>
-        const editor = document.getElementById('editor');
-        const installBtn = document.getElementById('install-btn');
-        const themeBtn = document.getElementById('theme-btn');
-        const exportBtn = document.getElementById('export-btn');
-        const clearBtn = document.getElementById('clear-btn');
+.delete-btn:hover {
+    opacity: 1;
+    background: #a00;
+}
 
-        /** 1. AUTO-SAVE & LOAD **/
-        editor.value = localStorage.getItem('pwa-editor-data') || '';
-        editor.addEventListener('input', () => {
-            localStorage.setItem('pwa-editor-data', editor.value);
+#title-container {
+    padding: 12px 20px;
+    background: #1e1e1e;
+    border-bottom: 1px solid #333;
+}
 
-            // Auto-resize
-            editor.style.height = 'auto';
-            editor.style.height = editor.scrollHeight + 'px';
-        });
-        // Initial resize
-        editor.style.height = editor.scrollHeight + 'px';
+#note-title {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 1.4em;
+    font-weight: bold;
+    outline: none;
+}
 
-        /** 2. SERVICE WORKER **/
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/aiapp/sw.js')
-                    .then(() => console.log('Service Worker registered'))
-                    .catch(err => console.log('Service Worker failed', err));
-            });
-        }
+#note-title::placeholder {
+    color: #777;
+}
 
-        /** 3. INSTALL BUTTON **/
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.style.display = 'inline-block';
-        });
-
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User Choice: ${outcome}`);
-                deferredPrompt = null;
-                installBtn.style.display = 'none';
-            }
-        });
-
-        window.addEventListener('appinstalled', () => {
-            installBtn.style.display = 'none';
-            console.log('App successfully installed');
-        });
-
-        /** 4. THEME TOGGLE **/
-        themeBtn.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            document.body.classList.toggle('light-mode');
-            editor.classList.toggle('dark-mode');
-            editor.classList.toggle('light-mode');
-        });
-
-        /** 5. EXPORT TO .TXT **/
-        exportBtn.addEventListener('click', () => {
-            const blob = new Blob([editor.value], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'note.txt';
-            link.click();
-        });
-
-        /** 6. CLEAR EDITOR **/
-        clearBtn.addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear all notes?')) {
-                editor.value = '';
-                localStorage.removeItem('pwa-editor-data');
-                editor.style.height = 'auto';
-            }
-        });
-    </script>
-</body>
-</html>
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
