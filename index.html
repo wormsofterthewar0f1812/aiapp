@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Text Editor</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root { --bg: #1e1e1e; --text: #d4d4d4; --accent: #007acc; }
+        body { margin: 0; font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* Header & Install Button */
+        header { padding: 10px 20px; background: #252526; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        #install-btn { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; display: none; font-weight: bold; }
+        #install-btn:hover { background: #005f9e; }
+
+        /* Editor Area */
+        #editor { flex: 1; width: 100%; background: var(--bg); color: var(--text); border: none; padding: 20px; font-family: 'Courier New', monospace; font-size: 16px; resize: none; outline: none; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <span>My PWA Editor</span>
+        <button id="install-btn">Install App</button>
+    </header>
+
+    <textarea id="editor" placeholder="Start typing... (Everything is auto-saved locally)"></textarea>
+
+    <script>
+        /** 1. EDITOR LOGIC: Auto-save to LocalStorage **/
+        const editor = document.getElementById('editor');
+        
+        // Load content on startup
+        editor.value = localStorage.getItem('pwa-editor-data') || '';
+
+        // Save on every keystroke
+        editor.addEventListener('input', () => {
+            localStorage.setItem('pwa-editor-data', editor.value);
+        });
+
+        /** 2. PWA SERVICE WORKER REGISTRATION **/
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker failed', err));
+            });
+        }
+
+        /** 3. INSTALLATION LOGIC **/
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome's default mini-bar
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the custom install button
+            installBtn.style.display = 'block';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Show the ChromeOS install dialog
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User Choice: ${outcome}`);
+                // Hide button after choice
+                deferredPrompt = null;
+                installBtn.style.display = 'none';
+            }
+        });
+
+        // Hide button if already installed
+        window.addEventListener('appinstalled', () => {
+            installBtn.style.display = 'none';
+            console.log('App successfully installed to ChromeOS Launcher');
+        });
+    </script>
+</body>
+</html>
