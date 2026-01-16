@@ -1,9 +1,10 @@
 ﻿const CACHE_NAME = 'editor-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  '/aiapp/',
+  '/aiapp/index.html',
+  '/aiapp/manifest.json'
 ];
+
 
 
 // Install event: Caches the app shell
@@ -21,4 +22,5 @@ self.addEventListener('fetch', (event) => {
       return response || fetch(event.request);
     })
   );
+
 });
