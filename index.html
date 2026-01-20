@@ -1,446 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PWA Text Editor</title>
-    <link rel="manifest" href="manifest.json">
-    <!-- marked.js for markdown preview -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-        :root {
-            --bg-dark: #1e1e1e;
-            --text-dark: #d4d4d4;
-            --bg-light: #ffffff;
-            --text-light: #1e1e1e;
-            --accent: #007acc;
-            --sidebar-bg: #252526;
-        }
-        body {
-            margin: 0;
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            transition: background 0.3s, color 0.3s;
-        }
-        body.dark-mode { background: var(--bg-dark); color: var(--text-dark); }
-        body.light-mode { background: var(--bg-light); color: var(--text-light); }
-        header {
-            padding: 10px 20px;
-            background: var(--sidebar-bg);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #333;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 10;
-        }
-        #stats {
-            font-size: 0.9em;
-            opacity: 0.8;
-            margin-left: 15px;
-        }
-        button {
-            margin-left: 10px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-        button:hover { background: #005f9e; }
-        #main-container {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-        #sidebar {
-            width: 260px;
-            background: var(--sidebar-bg);
-            border-right: 1px solid #333;
-            padding: 15px 10px;
-            overflow-y: auto;
-            color: #ccc;
-        }
-        #sidebar h3 {
-            margin: 0 0 12px;
-            font-size: 1.1em;
-            color: #ddd;
-        }
-        #search-input {
-            width: 100%;
-            padding: 8px 12px;
-            margin-bottom: 12px;
-            border: 1px solid #444;
-            border-radius: 4px;
-            background: #2d2d2d;
-            color: inherit;
-            font-size: 0.95em;
-        }
-        #note-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        #note-list li {
-            padding: 9px 12px;
-            margin: 3px 0;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-        #note-list li:hover, #note-list li.active {
-            background: #37373d;
-        }
-        #note-list .note-title {
-            font-weight: 500;
-        }
-        #note-list small {
-            font-size: 0.78em;
-            opacity: 0.7;
-        }
-        .delete-btn {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #c00;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 22px;
-            height: 22px;
-            line-height: 20px;
-            font-size: 16px;
-            cursor: pointer;
-            opacity: 0.8;
-        }
-        .delete-btn:hover { opacity: 1; background: #a00; }
-        #title-container {
-            padding: 12px 20px;
-            background: #1e1e1e;
-            border-bottom: 1px solid #333;
-        }
-        #note-title {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: inherit;
-            font-size: 1.5em;
-            font-weight: bold;
-            outline: none;
-        }
-        #note-title::placeholder { color: #777; }
-        #preview-container {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background: inherit;
-            color: inherit;
-        }
-        #preview-container img { max-width: 100%; }
-        main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        #editor {
-            flex: 1;
-            width: 100%;
-            border: none;
-            padding: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 16px;
-            line-height: 1.6;
-            resize: none;
-            outline: none;
-            overflow-y: auto;
-            transition: background 0.3s, color 0.3s;
-        }
-        #editor.dark-mode { background: var(--bg-dark); color: var(--text-dark); }
-        #editor.light-mode { background: var(--bg-light); color: var(--text-light); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PWA Text Editor</title>
+
+<link rel="manifest" href="manifest.json">
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+:root {
+    --bg-dark:#1e1e1e;
+    --text-dark:#d4d4d4;
+    --accent:#007acc;
+    --sidebar-bg:#252526;
+}
+
+body {
+    margin:0;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    background:var(--bg-dark);
+    color:var(--text-dark);
+    font-family:sans-serif;
+}
+
+header {
+    padding:10px 20px;
+    background:var(--sidebar-bg);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:1px solid #333;
+}
+
+button {
+    margin-left:8px;
+    padding:6px 10px;
+    border:none;
+    border-radius:4px;
+    background:var(--accent);
+    color:white;
+    cursor:pointer;
+}
+
+#main-container {
+    flex:1;
+    display:flex;
+    overflow:hidden;
+}
+
+#sidebar {
+    width:260px;
+    background:var(--sidebar-bg);
+    padding:10px;
+    overflow-y:auto;
+}
+
+#note-list {
+    list-style:none;
+    padding:0;
+    margin:0;
+}
+
+#note-list li {
+    padding:8px;
+    cursor:pointer;
+}
+
+#note-list li.active {
+    background:#37373d;
+}
+
+main {
+    flex:1;
+    display:flex;
+    flex-direction:column;
+}
+
+#title-container {
+    padding:10px;
+    border-bottom:1px solid #333;
+}
+
+#note-title {
+    width:100%;
+    background:none;
+    border:none;
+    color:inherit;
+    font-size:1.4em;
+    outline:none;
+}
+
+/* Editor + line numbers */
+#editor-wrapper {
+    flex:1;
+    display:flex;
+    overflow:hidden;
+    font-family:monospace;
+}
+
+#line-numbers {
+    padding:20px 10px;
+    background:#1b1b1b;
+    color:#777;
+    text-align:right;
+    user-select:none;
+    border-right:1px solid #333;
+    line-height:1.6;
+}
+
+#editor {
+    flex:1;
+    padding:20px;
+    border:none;
+    outline:none;
+    resize:none;
+    overflow:auto;
+
+    white-space:pre-wrap;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+
+    background:var(--bg-dark);
+    color:var(--text-dark);
+}
+
+#preview-container {
+    display:none;
+    padding:20px;
+    overflow-y:auto;
+}
+</style>
 </head>
-<body class="dark-mode">
-    <header>
-        <div>
-            <span>My PWA Editor</span>
-            <span id="stats">0 characters · 0 words</span>
-        </div>
-        <div>
-            <button id="new-btn">New Note</button>
-            <button id="install-btn" style="display:none;">Install App</button>
-            <button id="theme-btn">Toggle Theme</button>
-            <button id="preview-btn">Preview Markdown</button>
-            <button id="export-btn">Export .txt</button>
-            <button id="clear-btn">Clear Current</button>
-        </div>
-    </header>
 
-    <div id="main-container">
-        <aside id="sidebar">
-            <input type="text" id="search-input" placeholder="Search notes...">
-            <h3>Notes</h3>
-            <ul id="note-list"></ul>
-        </aside>
-        <main>
-            <div id="title-container">
-                <input type="text" id="note-title" placeholder="Untitled Note" value="">
-            </div>
-            <textarea id="editor" placeholder="Start typing... (auto-saved)"></textarea>
-            <div id="preview-container" style="display:none;"></div>
-        </main>
+<body>
+<header>
+    <div>
+        <span>PWA Editor</span>
+        <span id="stats">0 chars · 0 words</span>
     </div>
+    <div>
+        <button id="new-btn">New</button>
+        <button id="preview-btn">Preview</button>
+        <button id="export-btn">Export</button>
+    </div>
+</header>
 
-    <script>
-        const editor = document.getElementById('editor');
-        const previewContainer = document.getElementById('preview-container');
-        const noteTitle = document.getElementById('note-title');
-        const noteList = document.getElementById('note-list');
-        const searchInput = document.getElementById('search-input');
-        const newBtn = document.getElementById('new-btn');
-        const installBtn = document.getElementById('install-btn');
-        const themeBtn = document.getElementById('theme-btn');
-        const previewBtn = document.getElementById('preview-btn');
-        const exportBtn = document.getElementById('export-btn');
-        const clearBtn = document.getElementById('clear-btn');
-        const stats = document.getElementById('stats');
+<div id="main-container">
+    <aside id="sidebar">
+        <ul id="note-list"></ul>
+    </aside>
 
-        let notes = JSON.parse(localStorage.getItem('pwa-notes')) || [];
-        let currentNoteId = localStorage.getItem('pwa-current-note') || null;
-        let previewMode = false;
+    <main>
+        <div id="title-container">
+            <input id="note-title" placeholder="Untitled Note">
+        </div>
 
-        // Theme init
-        if (!localStorage.getItem('theme')) {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            localStorage.setItem('theme', prefersDark ? 'dark' : 'light');
-        }
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        document.body.classList.add(`${savedTheme}-mode`);
-        editor.classList.add(`${savedTheme}-mode`);
+        <div id="editor-wrapper">
+            <div id="line-numbers"></div>
+            <textarea id="editor" placeholder="Start typing…"></textarea>
+        </div>
 
-        function saveNotes() {
-            localStorage.setItem('pwa-notes', JSON.stringify(notes));
-        }
+        <div id="preview-container"></div>
+    </main>
+</div>
 
-        function createNote(title = 'Untitled Note', content = '') {
-            const note = {
-                id: Date.now().toString(),
-                title,
-                content,
-                updatedAt: new Date().toISOString()
-            };
-            notes.push(note);
-            saveNotes();
-            return note;
-        }
+<script>
+/* ===============================
+   Service Worker registration
+================================ */
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
 
-        function loadNote(note) {
-            currentNoteId = note.id;
-            localStorage.setItem('pwa-current-note', currentNoteId);
-            noteTitle.value = note.title;
-            editor.value = note.content;
-            editor.focus();
-            updateNoteList();
-            updateStats();
-            autoResize();
-            if (previewMode) updatePreview();
-        }
+/* ===============================
+   Editor logic
+================================ */
+const editor = document.getElementById('editor');
+const lineNumbers = document.getElementById('line-numbers');
+const preview = document.getElementById('preview-container');
+const noteTitle = document.getElementById('note-title');
+const noteList = document.getElementById('note-list');
+const stats = document.getElementById('stats');
 
-        function updateCurrentNote() {
-            if (!currentNoteId) return;
-            const note = notes.find(n => n.id === currentNoteId);
-            if (note) {
-                note.title = noteTitle.value.trim() || 'Untitled Note';
-                note.content = editor.value;
-                note.updatedAt = new Date().toISOString();
-                saveNotes();
-                updateNoteList();
-                updateStats();
-                if (previewMode) updatePreview();
-            }
-        }
+let notes = JSON.parse(localStorage.getItem('notes')) || [];
+let currentId = null;
+let previewMode = false;
 
-        function sortNotes() {
-            notes.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-        }
+function updateLineNumbers() {
+    const count = editor.value.split('\n').length;
+    lineNumbers.innerHTML = Array.from(
+        { length: count },
+        (_, i) => i + 1
+    ).join('<br>');
+}
 
-        function updateNoteList(filter = '') {
-            sortNotes();
-            noteList.innerHTML = '';
-            const lowerFilter = filter.toLowerCase();
-            notes
-                .filter(note => 
-                    note.title.toLowerCase().includes(lowerFilter) || 
-                    note.content.toLowerCase().includes(lowerFilter))
-                .forEach(note => {
-                    const li = document.createElement('li');
-                    li.className = note.id === currentNoteId ? 'active' : '';
-                    li.innerHTML = `
-                        <span class="note-title">${note.title}</span>
-                        <small>${new Date(note.updatedAt).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}</small>
-                        <button class="delete-btn" data-id="${note.id}">×</button>
-                    `;
-                    li.querySelector('.note-title').addEventListener('click', () => loadNote(note));
-                    li.querySelector('.delete-btn').addEventListener('click', e => {
-                        e.stopPropagation();
-                        if (confirm(`Delete "${note.title}"?`)) {
-                            notes = notes.filter(n => n.id !== note.id);
-                            saveNotes();
-                            if (currentNoteId === note.id) {
-                                currentNoteId = notes.length > 0 ? notes[0].id : null;
-                                localStorage.setItem('pwa-current-note', currentNoteId || '');
-                                if (notes.length > 0) loadNote(notes[0]);
-                                else {
-                                    editor.value = noteTitle.value = '';
-                                    updateStats();
-                                }
-                            }
-                            updateNoteList(searchInput.value);
-                        }
-                    });
-                    noteList.appendChild(li);
-                });
-        }
+function updateStats() {
+    const text = editor.value;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    stats.textContent = `${text.length} chars · ${words} words`;
+}
 
-        function updateStats() {
-            const text = editor.value;
-            const chars = text.length;
-            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-            stats.textContent = `${chars.toLocaleString()} characters · ${words.toLocaleString()} words`;
-        }
+function save() {
+    if (!currentId) return;
+    const n = notes.find(n => n.id === currentId);
+    n.title = noteTitle.value || 'Untitled';
+    n.content = editor.value;
+    localStorage.setItem('notes', JSON.stringify(notes));
+    renderList();
+}
 
-        function updatePreview() {
-            previewContainer.innerHTML = marked.parse(editor.value);
-        }
+function renderList() {
+    noteList.innerHTML = '';
+    notes.forEach(n => {
+        const li = document.createElement('li');
+        li.textContent = n.title;
+        li.className = n.id === currentId ? 'active' : '';
+        li.onclick = () => load(n);
+        noteList.appendChild(li);
+    });
+}
 
-        function autoResize() {
-            editor.style.height = 'auto';
-            editor.style.height = editor.scrollHeight + 'px';
-        }
+function load(note) {
+    currentId = note.id;
+    noteTitle.value = note.title;
+    editor.value = note.content;
+    updateLineNumbers();
+    updateStats();
+    renderList();
+}
 
-        // Init
-        sortNotes();
-        if (notes.length === 0) {
-            const welcome = createNote('Welcome to Notes!', '# Hello!\n\nThis is a multi-document PWA editor.\nEverything is saved locally.\nEnjoy! ✍️');
-            loadNote(welcome);
-        } else {
-            const lastNote = notes.find(n => n.id === currentNoteId) || notes[0];
-            loadNote(lastNote);
-        }
-        updateNoteList();
+function createNote() {
+    const n = { id: Date.now(), title:'Untitled', content:'' };
+    notes.push(n);
+    load(n);
+    save();
+}
 
-        // Events
-        editor.addEventListener('input', () => {
-            updateCurrentNote();
-            autoResize();
-        });
+editor.addEventListener('input', () => {
+    updateLineNumbers();
+    updateStats();
+    save();
+});
 
-        noteTitle.addEventListener('input', updateCurrentNote);
-        noteTitle.addEventListener('focus', () => noteTitle.select());
+editor.addEventListener('scroll', () => {
+    lineNumbers.scrollTop = editor.scrollTop;
+});
 
-        searchInput.addEventListener('input', () => updateNoteList(searchInput.value));
+document.getElementById('new-btn').onclick = createNote;
 
-        newBtn.addEventListener('click', () => {
-            const newNote = createNote();
-            loadNote(newNote);
-        });
+document.getElementById('preview-btn').onclick = () => {
+    previewMode = !previewMode;
+    document.getElementById('editor-wrapper').style.display = previewMode ? 'none' : 'flex';
+    preview.style.display = previewMode ? 'block' : 'none';
+    if (previewMode) preview.innerHTML = marked.parse(editor.value);
+};
 
-        themeBtn.addEventListener('click', () => {
-            const isDark = document.body.classList.toggle('dark-mode');
-            document.body.classList.toggle('light-mode');
-            editor.classList.toggle('dark-mode');
-            editor.classList.toggle('light-mode');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        });
+document.getElementById('export-btn').onclick = () => {
+    const blob = new Blob([editor.value], { type:'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (noteTitle.value || 'note') + '.txt';
+    a.click();
+};
 
-        previewBtn.addEventListener('click', () => {
-            previewMode = !previewMode;
-            previewBtn.textContent = previewMode ? 'Edit Markdown' : 'Preview Markdown';
-            editor.style.display = previewMode ? 'none' : 'block';
-            previewContainer.style.display = previewMode ? 'block' : 'none';
-            if (previewMode) updatePreview();
-        });
-
-        exportBtn.addEventListener('click', () => {
-            if (!currentNoteId) return;
-            const note = notes.find(n => n.id === currentNoteId);
-            const blob = new Blob([note.content], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `${note.title.replace(/[^a-z0-9]/gi, '_')}.txt`;
-            link.click();
-        });
-
-        clearBtn.addEventListener('click', () => {
-            if (confirm('Clear current note?')) {
-                editor.value = '';
-                updateCurrentNote();
-                autoResize();
-            }
-        });
-
-        // Keyboard shortcuts
-        window.addEventListener('keydown', e => {
-            if (e.ctrlKey || e.metaKey) {
-                switch (e.key.toLowerCase()) {
-                    case 'n':
-                        e.preventDefault();
-                        newBtn.click();
-                        break;
-                    case 'e':
-                        e.preventDefault();
-                        exportBtn.click();
-                        break;
-                    case 's':
-                        e.preventDefault();
-                        updateCurrentNote(); // already auto-saves, but gives feedback
-                        stats.textContent += ' · Saved!';
-                        setTimeout(updateStats, 1200);
-                        break;
-                }
-            }
-        });
-
-        // Tab → insert 2 spaces
-        editor.addEventListener('keydown', e => {
-            if (e.key === 'Tab') {
-                e.preventDefault();
-                const start = editor.selectionStart;
-                const end = editor.selectionEnd;
-                editor.setRangeText('  ', start, end, 'end');
-                editor.selectionStart = editor.selectionEnd = start + 2;
-            }
-        });
-
-        // Auto-resize & install prompt
-        autoResize();
-
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', e => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.style.display = 'inline-block';
-        });
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log(`Install: ${outcome}`);
-                deferredPrompt = null;
-                installBtn.style.display = 'none';
-            }
-        });
-        window.addEventListener('appinstalled', () => {
-            installBtn.style.display = 'none';
-        });
-    </script>
+/* Init */
+if (notes.length === 0) createNote();
+else load(notes[0]);
+</script>
 </body>
 </html>
